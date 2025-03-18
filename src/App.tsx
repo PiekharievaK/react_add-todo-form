@@ -1,12 +1,15 @@
-import './App.scss';
+import { useState } from 'react';
 
 import usersFromServer from './api/users';
 import todosFromServer from './api/todos';
+
 import { Todo } from './types/Todo';
 import { User } from './types/User';
 import { TodoWithUser } from './types/TodoWithUser';
-import { useState } from 'react';
+
 import { TodoList } from './components/TodoList';
+
+import './App.scss';
 
 export const App = () => {
   const findOwner = (id: Todo['id']): User | undefined => {
@@ -23,10 +26,10 @@ export const App = () => {
     useState<TodoWithUser[]>(todoVithUsers);
   const [titleValue, setTitleValue] = useState('');
   const [userIdValue, setUserIdValue] = useState(0);
-  // const [toutchedField, setTouchedField] = useState({
-  //   titleInput: false,
-  //   userIdInput: false,
-  // });
+  const [toutchedField, setTouchedField] = useState({
+    titleInput: false,
+    userIdInput: false,
+  });
 
   const createTodo = (): TodoWithUser => {
     const newId: number =
@@ -45,9 +48,9 @@ export const App = () => {
   const onInputChange = (value: string | number) => {
     if (typeof value === 'string') {
       setTitleValue(value);
-      // setTouchedField(prev => ({ ...prev, titleInput: false }));
+      setTouchedField(prev => ({ ...prev, titleInput: false }));
     } else {
-      // setTouchedField(prev => ({ ...prev, userIdInput: false }));
+      setTouchedField(prev => ({ ...prev, userIdInput: false }));
       setUserIdValue(value);
     }
   };
@@ -55,14 +58,26 @@ export const App = () => {
   const reset = () => {
     setTitleValue('');
     setUserIdValue(0);
-    // setTouchedField({
-    //   titleInput: false,
-    //   userIdInput: false,
-    // });
+    setTouchedField({
+      titleInput: false,
+      userIdInput: false,
+    });
   };
 
-  const onFormSubmit = (event: HTMLFormElement) => {
-    event.preventDefault();
+  const onFormSubmit = (submitEvent: React.FormEvent<HTMLFormElement>) => {
+    submitEvent.preventDefault();
+
+    if (!titleValue.length) {
+      setTouchedField(prev => ({
+        ...prev,
+        titleInput: true,
+      }));
+    }
+
+    if (!userIdValue) {
+      setTouchedField(prev => ({ ...prev, userIdInput: true }))
+    }
+
     if (titleValue.length < 1 || userIdValue === 0) {
       return;
     }
@@ -85,17 +100,10 @@ export const App = () => {
             data-cy="titleInput"
             placeholder="enter some text"
             value={titleValue}
-            onChange={event => onInputChange(event.target.value)}
-            required
-            // onBlur={event =>
-            //   setTouchedField(prev => ({
-            //     ...prev,
-            //     titleInput: true,
-            //   }))
-            // }
+            onChange={changeEvent => onInputChange(changeEvent.target.value)}
           />
 
-          {titleValue.length < 1 && (
+          {titleValue.length < 1 && toutchedField.titleInput && (
             <span className="error">Please enter a title</span>
           )}
         </div>
@@ -104,11 +112,9 @@ export const App = () => {
           <select
             data-cy="userSelect"
             value={userIdValue}
-            onChange={event => onInputChange(+event.target.value)}
-            required
-            // onBlur={event =>
-            //   setTouchedField(prev => ({ ...prev, userIdInput: true }))
-            // }
+            onChange={ChchangeEvent =>
+              onInputChange(+ChchangeEvent.target.value)
+            }
           >
             <option value="0" disabled>
               Choose a user
@@ -119,7 +125,7 @@ export const App = () => {
               </option>
             ))}
           </select>
-          {userIdValue <= 0 && (
+          {userIdValue < 1 && toutchedField.userIdInput && (
             <span className="error">Please choose a user</span>
           )}
         </div>
